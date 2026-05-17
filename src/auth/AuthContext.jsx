@@ -6,58 +6,130 @@ import {
   useMemo,
   useState,
 } from 'react'
+import { supabase } from '../lib/supabaseClient'
+import { fetchProfile } from '../lib/profile'
 
 const AuthContext = createContext(null)
-const STORAGE_KEY = 'padro:auth'
+
+/**
+ * Map a Supabase user (auth.users + user_metadata from Google) into the
+ * profile shape the rest of the app already expects.
+ */
+function mapUser(session) {
+  const u = session?.user
+  if (!u) return null
+  const m = u.user_metadata ?? {}
+  return {
+    id: u.id,
+    email: u.email ?? m.email ?? null,
+    name: m.full_name || m.name || u.email,
+    givenName: m.given_name || (m.full_name?.split(' ')[0] ?? null),
+    familyName: m.family_name || (m.full_name?.split(' ').slice(1).join(' ') || null),
+    picture: m.avatar_url || m.picture || null,
+    emailVerified: !!u.email_confirmed_at || !!m.email_verified,
+    locale: m.locale ?? null,
+    provider: u.app_metadata?.provider ?? 'unknown',
+    signedInAt: u.last_sign_in_at || new Date().toISOString(),
+  }
+}
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(() => {
-    if (typeof window === 'undefined') return null
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY)
-      return raw ? JSON.parse(raw) : null
-    } catch {
-      return null
-    }
-  })
+  const [user, setUser] = useState(null)
+  const [profile, setProfile] = useState(null)
+  // `loading` covers the initial getSession() round-trip, any in-flight
+  // OAuth callback being parsed by supabase-js, AND the follow-up profile
+  // fetch. Consumers (RequireAuth, RequireOnboarded) can render a single
+  // gate while everything settles.
+  const [loading, setLoading] = useState(true)
 
-  // Sync across tabs
+  const loadProfile = useCallback(async (userId) => {
+    if (!userId) {
+      setProfile(null)
+      return
+    }
+    const { data } = await fetchProfile(userId)
+    setProfile(data ?? null)
+  }, [])
+
   useEffect(() => {
-    function onStorage(e) {
-      if (e.key !== STORAGE_KEY) return
-      setUser(e.newValue ? JSON.parse(e.newValue) : null)
+    let cancelled = false
+
+    async function init() {
+      const { data } = await supabase.auth.getSession()
+      if (cancelled) return
+      const mapped = mapUser(data.session)
+      setUser(mapped)
+      if (mapped) await loadProfile(mapped.id)
+      if (!cancelled) setLoading(false)
     }
-    window.addEventListener('storage', onStorage)
-    return () => window.removeEventListener('storage', onStorage)
+
+    init()
+
+    const { data: sub } = supabase.auth.onAuthStateChange(
+      async (_event, session) => {
+        const mapped = mapUser(session)
+        setUser(mapped)
+        if (mapped) {
+          await loadProfile(mapped.id)
+        } else {
+          setProfile(null)
+        }
+        setLoading(false)
+      },
+    )
+
+    return () => {
+      cancelled = true
+      sub?.subscription?.unsubscribe()
+    }
+  }, [loadProfile])
+
+  /**
+   * Kicks off the OAuth redirect. Resolves to `{ error }` if Supabase couldn't
+   * start the flow; otherwise the browser leaves the page entirely and the
+   * resolution doesn't matter (we come back via `detectSessionInUrl`).
+   */
+  const signIn = useCallback(async ({ redirectTo } = {}) => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: redirectTo ?? `${window.location.origin}/account`,
+        queryParams: {
+          prompt: 'select_account',
+        },
+      },
+    })
+    return { error }
   }, [])
 
-  const signIn = useCallback((profile) => {
-    const next = {
-      ...profile,
-      signedInAt: new Date().toISOString(),
-    }
-    setUser(next)
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
-  }, [])
-
-  const signOut = useCallback(() => {
+  const signOut = useCallback(async () => {
+    await supabase.auth.signOut()
     setUser(null)
-    localStorage.removeItem(STORAGE_KEY)
+    setProfile(null)
   }, [])
+
+  const refreshProfile = useCallback(async () => {
+    if (user?.id) await loadProfile(user.id)
+  }, [user, loadProfile])
 
   const value = useMemo(
     () => ({
       user,
+      profile,
       isAuthenticated: !!user,
+      isOnboarded: !!profile?.onboarded_at,
+      loading,
       signIn,
       signOut,
+      refreshProfile,
     }),
-    [user, signIn, signOut],
+    [user, profile, loading, signIn, signOut, refreshProfile],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useAuth() {
   const ctx = useContext(AuthContext)
   if (!ctx) {

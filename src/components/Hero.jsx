@@ -1,4 +1,5 @@
 import { useRef } from 'react'
+import { Link } from 'react-router-dom'
 import {
   motion,
   useReducedMotion,
@@ -6,7 +7,10 @@ import {
   useTransform,
 } from 'framer-motion'
 import { StaggerGroup, StaggerItem, SOFT_HOVER } from './motion-primitives'
+import { scrollToId } from '../lib/scroll'
 import heroImg from '../assets/hero.png'
+
+const MotionLink = motion(Link)
 
 export function Hero() {
   const reduce = useReducedMotion()
@@ -101,8 +105,8 @@ export function Hero() {
             {/* CTA + secondary link */}
             <StaggerItem>
               <div className="mt-12 flex flex-wrap items-center gap-x-8 gap-y-5">
-                <motion.a
-                  href="#find"
+                <MotionLink
+                  to="/login"
                   {...SOFT_HOVER}
                   className="group relative inline-flex cursor-pointer items-center gap-3 overflow-hidden rounded-xl bg-secondary-container px-10 py-5 text-label-md font-bold text-primary shadow-[0_22px_50px_-18px_rgba(254,147,44,0.8)] transition-shadow duration-500 hover:shadow-[0_30px_60px_-18px_rgba(254,147,44,1)]"
                 >
@@ -123,10 +127,11 @@ export function Hero() {
                   >
                     <path d="M4 10h12M11 5l5 5-5 5" />
                   </svg>
-                </motion.a>
+                </MotionLink>
 
                 <a
-                  href="#how"
+                  href="#players"
+                  onClick={(e) => scrollToId('players', e)}
                   className="group inline-flex items-center gap-3 text-label-md text-on-primary-container transition-colors hover:text-surface"
                 >
                   <span>How it works</span>
@@ -205,7 +210,8 @@ export function Hero() {
           </span>
           <span className="sm:hidden">Padro</span>
           <a
-            href="#why"
+            href="#players"
+            onClick={(e) => scrollToId('players', e)}
             className="group inline-flex items-center gap-3 transition-colors hover:text-surface"
           >
             <span>Scroll</span>

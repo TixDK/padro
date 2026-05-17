@@ -4,11 +4,12 @@ import { motion, useReducedMotion, AnimatePresence } from 'framer-motion'
 import { SOFT_HOVER } from './motion-primitives'
 import padroLogo from '../assets/padro.png'
 import { useAuth } from '../auth/AuthContext'
+import { scrollToId } from '../lib/scroll'
 
 const LINKS = [
-  { label: 'Home', href: '#top' },
-  { label: 'For Players', href: '#players' },
-  { label: 'For Coaches', href: '#coaches' },
+  { label: 'Home', target: 'top' },
+  { label: 'For Players', target: 'players' },
+  { label: 'For Coaches', target: 'coaches' },
 ]
 
 export function Navbar() {
@@ -65,8 +66,11 @@ export function Navbar() {
             return (
               <li key={link.label}>
                 <a
-                  href={link.href}
-                  onClick={() => setActive(link.label)}
+                  href={`#${link.target}`}
+                  onClick={(e) => {
+                    scrollToId(link.target, e)
+                    setActive(link.label)
+                  }}
                   className="group relative inline-flex cursor-pointer items-center rounded-lg px-3.5 py-2 text-label-md font-medium transition-colors duration-200"
                 >
                   {isActive && !reduce && (
@@ -165,11 +169,12 @@ export function Navbar() {
                 return (
                   <li key={link.label}>
                     <a
-                      onClick={() => {
+                      onClick={(e) => {
+                        scrollToId(link.target, e)
                         setOpen(false)
                         setActive(link.label)
                       }}
-                      href={link.href}
+                      href={`#${link.target}`}
                       className={`flex cursor-pointer items-center justify-between rounded-lg px-4 py-3 text-base font-medium transition-colors hover:bg-primary/[0.04] ${
                         isActive ? 'text-primary' : 'text-on-surface'
                       }`}

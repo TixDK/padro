@@ -1,9 +1,20 @@
 import { motion } from 'framer-motion'
 import { Reveal, SOFT_HOVER } from './motion-primitives'
 import padroLogo from '../assets/padro.png'
+import { scrollToId, scrollToTop, preventNav } from '../lib/scroll'
 
-const PADRO_LINKS = ['About us', 'For Coaches', 'For Players', 'Contact']
-const LEGAL_LINKS = ['Privacy', 'Terms', 'Cookies', 'Help Centre']
+const PADRO_LINKS = [
+  { label: 'About us', onClick: preventNav },
+  { label: 'For Coaches', onClick: (e) => scrollToId('coaches', e) },
+  { label: 'For Players', onClick: (e) => scrollToId('players', e) },
+  { label: 'Contact', onClick: preventNav },
+]
+const LEGAL_LINKS = [
+  { label: 'Privacy', onClick: preventNav },
+  { label: 'Terms', onClick: preventNav },
+  { label: 'Cookies', onClick: preventNav },
+  { label: 'Help Centre', onClick: preventNav },
+]
 
 export function Footer() {
   return (
@@ -25,7 +36,11 @@ export function Footer() {
           <div className="grid grid-cols-1 gap-14 border-b border-on-primary-container/15 pb-16 md:grid-cols-12 md:gap-gutter md:pb-20">
             {/* Brand */}
             <div className="md:col-span-5">
-              <a href="#top" className="group inline-flex items-center gap-3">
+              <a
+                href="#top"
+                onClick={scrollToTop}
+                className="group inline-flex items-center gap-3"
+              >
                 <span className="relative inline-flex h-12 w-12 items-center justify-center overflow-hidden rounded-full bg-surface/10 ring-1 ring-secondary-container/40 transition-all duration-500 group-hover:ring-secondary-container/70">
                   <span
                     aria-hidden
@@ -124,7 +139,7 @@ export function Footer() {
             © 2026 Padro · All rights reserved
           </p>
 
-          <SocialLink label="LinkedIn" href="#">
+          <SocialLink label="LinkedIn" href="#" onClick={preventNav}>
             <LinkedInGlyph />
           </SocialLink>
         </div>
@@ -145,13 +160,14 @@ function LinkColumn({ title, links }) {
       </h4>
       <ul className="space-y-4">
         {links.map((link) => (
-          <li key={link}>
+          <li key={link.label}>
             <a
               href="#"
+              onClick={link.onClick}
               className="group inline-flex items-center text-body-md text-on-primary-container/85 transition-colors hover:text-surface"
             >
               <span className="relative">
-                {link}
+                {link.label}
                 <span
                   aria-hidden
                   className="absolute inset-x-0 -bottom-0.5 h-px origin-left scale-x-0 bg-secondary-container/70 transition-transform duration-500 ease-out group-hover:scale-x-100"
@@ -165,10 +181,11 @@ function LinkColumn({ title, links }) {
   )
 }
 
-function SocialLink({ label, href, children }) {
+function SocialLink({ label, href, onClick, children }) {
   return (
     <a
       href={href}
+      onClick={onClick}
       aria-label={label}
       className="group inline-flex h-10 w-10 items-center justify-center rounded-full border border-on-primary-container/25 bg-primary/30 text-on-primary-container/80 backdrop-blur-sm transition-all duration-300 hover:border-secondary-container/70 hover:bg-primary/55 hover:text-surface"
     >

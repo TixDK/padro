@@ -7,6 +7,7 @@ import {
 } from 'framer-motion'
 import { SOFT_HOVER } from './motion-primitives'
 import { Eyebrow } from './Icon'
+import { preventNav } from '../lib/scroll'
 
 export function DownloadApp() {
   const reduce = useReducedMotion()
@@ -181,6 +182,7 @@ function StoreBadge({ label, name, icon }) {
     <motion.a
       ref={ref}
       href="#"
+      onClick={preventNav}
       onMouseMove={onMove}
       onMouseLeave={onLeave}
       style={reduce ? undefined : { x: xs, y: ys }}

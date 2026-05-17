@@ -151,17 +151,20 @@ export function Account() {
               <QuickLink
                 title="Browse coaches"
                 hint="Filter by city, level, language"
-                to="/#coaches"
+                to="/"
+                scrollTarget="coaches"
               />
               <QuickLink
                 title="How it works"
                 hint="The Padro promise, in 60s"
-                to="/#why"
+                to="/"
+                scrollTarget="players"
               />
               <QuickLink
                 title="Become a coach"
                 hint="Get paid what you're worth"
-                to="/#apply"
+                to="/"
+                scrollTarget="coaches"
               />
             </div>
           </div>
@@ -177,10 +180,11 @@ export function Account() {
   )
 }
 
-function QuickLink({ title, hint, to }) {
+function QuickLink({ title, hint, to, scrollTarget }) {
   return (
     <Link
       to={to}
+      state={scrollTarget ? { scrollTo: scrollTarget } : undefined}
       className="group flex flex-col rounded-2xl border border-white/10 bg-primary/40 p-4 transition-colors hover:border-secondary-container/45 hover:bg-primary/60"
     >
       <span className="flex items-center justify-between">

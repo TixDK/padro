@@ -1,5 +1,8 @@
 import { motion } from 'framer-motion'
+import { Link } from 'react-router-dom'
 import { Reveal, SOFT_HOVER } from './motion-primitives'
+
+const MotionLink = motion(Link)
 
 export function FinalCTA() {
   return (
@@ -11,8 +14,8 @@ export function FinalCTA() {
           <span className="italic text-secondary-container">Or become one.</span>
         </h2>
         <div className="flex flex-col justify-center gap-4 sm:flex-row sm:gap-6">
-          <motion.a
-            href="#find"
+          <MotionLink
+            to="/login"
             {...SOFT_HOVER}
             className="group relative inline-flex cursor-pointer items-center justify-center gap-3 overflow-hidden rounded-xl bg-secondary-container px-10 py-5 text-label-md font-bold text-primary shadow-[0_18px_40px_-18px_rgba(254,147,44,0.7)] transition-shadow duration-500 hover:shadow-[0_24px_50px_-16px_rgba(254,147,44,0.85)]"
           >
@@ -33,9 +36,9 @@ export function FinalCTA() {
             >
               <path d="M4 10h12M11 5l5 5-5 5" />
             </svg>
-          </motion.a>
-          <motion.a
-            href="#apply"
+          </MotionLink>
+          <MotionLink
+            to="/login"
             {...SOFT_HOVER}
             className="group inline-flex cursor-pointer items-center justify-center gap-3 rounded-xl border border-primary/20 px-10 py-5 text-label-md font-bold text-primary transition-colors duration-300 hover:border-primary hover:bg-primary/[0.04]"
           >
@@ -52,7 +55,7 @@ export function FinalCTA() {
             >
               <path d="M6 14L14 6M8 6h6v6" />
             </svg>
-          </motion.a>
+          </MotionLink>
         </div>
       </Reveal>
     </section>

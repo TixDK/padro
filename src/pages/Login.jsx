@@ -1,17 +1,17 @@
 import { useCallback, useState } from 'react'
-import { Link, useNavigate, useLocation } from 'react-router-dom'
-import { useGoogleLogin } from '@react-oauth/google'
+import { Link, useLocation } from 'react-router-dom'
 import { motion, useReducedMotion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '../auth/AuthContext'
 import { useRateLimit } from '../auth/useRateLimit'
 import { GoogleButton } from '../auth/GoogleButton'
 import padroLogo from '../assets/padro.png'
 
-const HAS_CLIENT_ID = Boolean(import.meta.env.VITE_GOOGLE_CLIENT_ID)
+const HAS_SUPABASE_ENV = Boolean(
+  import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+)
 
 export function Login() {
   const reduce = useReducedMotion()
-  const navigate = useNavigate()
   const location = useLocation()
   const { signIn } = useAuth()
 
@@ -25,62 +25,35 @@ export function Login() {
     storageKey: 'padro:rl:login',
   })
 
-  const redirectTo = location.state?.from?.pathname || '/account'
+  // Preserve the original destination if the user was bounced by RequireAuth.
+  const intended = location.state?.from?.pathname || '/account'
+  const redirectTo = `${window.location.origin}${intended}`
 
-  const handleSuccess = useCallback(
-    async ({ access_token }) => {
-      try {
-        const res = await fetch(
-          'https://www.googleapis.com/oauth2/v3/userinfo',
-          { headers: { Authorization: `Bearer ${access_token}` } },
-        )
-        if (!res.ok) throw new Error('profile_fetch_failed')
-        const p = await res.json()
-        signIn({
-          id: p.sub,
-          name: p.name,
-          givenName: p.given_name,
-          familyName: p.family_name,
-          email: p.email,
-          emailVerified: p.email_verified,
-          picture: p.picture,
-          locale: p.locale,
-        })
-        rl.reset()
-        navigate(redirectTo, { replace: true })
-      } catch {
-        setError(
-          'We reached Google but couldn’t load your profile. Try again.',
-        )
-      } finally {
-        setLoading(false)
-      }
-    },
-    [signIn, navigate, redirectTo, rl],
-  )
-
-  const handleError = useCallback((err) => {
-    setLoading(false)
-    const desc = err?.error_description || err?.error || 'sign_in_cancelled'
-    if (desc === 'sign_in_cancelled' || desc === 'popup_closed_by_user') {
-      setError(null)
-    } else {
-      setError('Sign in didn’t go through. Try again in a moment.')
-    }
-  }, [])
-
-  const attemptAllowed = useCallback(() => {
+  const handleSignIn = useCallback(async () => {
     setError(null)
     const { allowed, remainingMs } = rl.attempt()
     if (!allowed) {
       setError(
         `Too many attempts. Try again in ${Math.ceil(remainingMs / 1000)}s.`,
       )
-      return false
+      return
     }
+
     setLoading(true)
-    return true
-  }, [rl])
+    const { error: err } = await signIn({ redirectTo })
+    if (err) {
+      // Most errors here mean Supabase couldn't kick off the redirect at all
+      // (misconfigured provider, network). The actual Google round-trip is
+      // out of our hands once the redirect fires.
+      setLoading(false)
+      setError(
+        err.message ||
+          'Sign in didn’t go through. Try again in a moment.',
+      )
+    }
+    // On success the browser is already navigating to Google — no cleanup
+    // needed; we come back via detectSessionInUrl after the round-trip.
+  }, [signIn, redirectTo, rl])
 
   return (
     <main className="relative flex min-h-screen flex-col items-center justify-center bg-surface px-4 py-10 text-on-surface sm:py-16">
@@ -132,7 +105,7 @@ export function Login() {
             Sign in to your member profile.
           </p>
 
-          {!HAS_CLIENT_ID && (
+          {!HAS_SUPABASE_ENV && (
             <div
               role="status"
               className="mt-6 flex items-start gap-3 rounded-lg border border-secondary-container/50 bg-secondary-container/10 p-3 text-[12px] leading-snug text-on-surface"
@@ -146,26 +119,20 @@ export function Login() {
                 <path d="M10 2a8 8 0 100 16 8 8 0 000-16zm0 4a1 1 0 011 1v4a1 1 0 11-2 0V7a1 1 0 011-1zm0 9a1.25 1.25 0 110-2.5 1.25 1.25 0 010 2.5z" />
               </svg>
               <span>
-                <strong className="text-primary">Add a Google Client ID.</strong>{' '}
-                Copy <code>.env.example</code> → <code>.env.local</code> and set{' '}
-                <code>VITE_GOOGLE_CLIENT_ID</code>.
+                <strong className="text-primary">Add Supabase keys.</strong>{' '}
+                Copy <code>.env.example</code> → <code>.env.local</code> and fill in{' '}
+                <code>VITE_SUPABASE_URL</code> + <code>VITE_SUPABASE_PUBLISHABLE_KEY</code>.
               </span>
             </div>
           )}
 
           {/* Action */}
           <div className="mt-8">
-            {HAS_CLIENT_ID ? (
-              <GoogleLoginAction
-                attemptAllowed={attemptAllowed}
-                onSuccess={handleSuccess}
-                onError={handleError}
-                loading={loading}
-                disabled={rl.locked}
-              />
-            ) : (
-              <GoogleButton onClick={() => {}} disabled />
-            )}
+            <GoogleButton
+              onClick={handleSignIn}
+              loading={loading}
+              disabled={!HAS_SUPABASE_ENV || rl.locked}
+            />
           </div>
 
           {/* Feedback */}
@@ -235,44 +202,25 @@ export function Login() {
 
         {/* Tiny inline legal links — no real footer */}
         <p className="mt-10 text-center text-[11px] text-on-surface-variant/80">
-          <a href="#terms" className="hover:text-primary">
+          <a
+            href="#"
+            onClick={(e) => e.preventDefault()}
+            className="hover:text-primary"
+          >
             Terms
           </a>
           <span aria-hidden className="mx-2 text-on-surface-variant/40">
             ·
           </span>
-          <a href="#privacy" className="hover:text-primary">
+          <a
+            href="#"
+            onClick={(e) => e.preventDefault()}
+            className="hover:text-primary"
+          >
             Privacy
           </a>
         </p>
       </motion.div>
     </main>
-  )
-}
-
-/**
- * Isolated so `useGoogleLogin` only runs when a client ID is present —
- * avoids the GIS "Missing required parameter client_id" crash.
- */
-function GoogleLoginAction({
-  attemptAllowed,
-  onSuccess,
-  onError,
-  loading,
-  disabled,
-}) {
-  const login = useGoogleLogin({
-    flow: 'implicit',
-    scope: 'openid email profile',
-    onSuccess,
-    onError,
-  })
-
-  const handleClick = () => {
-    if (attemptAllowed()) login()
-  }
-
-  return (
-    <GoogleButton onClick={handleClick} loading={loading} disabled={disabled} />
   )
 }

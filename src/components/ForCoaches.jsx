@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion'
+import { Link } from 'react-router-dom'
 import {
   Reveal,
   StaggerGroup,
@@ -6,6 +7,8 @@ import {
   SOFT_HOVER,
 } from './motion-primitives'
 import { Eyebrow, Icon } from './Icon'
+
+const MotionLink = motion(Link)
 
 const ITEMS = [
   {
@@ -96,8 +99,8 @@ export function ForCoaches() {
       {/* CTA */}
       <Reveal delay={0.3}>
         <div className="mt-16 flex justify-center md:mt-20">
-          <motion.a
-            href="#apply"
+          <MotionLink
+            to="/login"
             {...SOFT_HOVER}
             className="group relative inline-flex cursor-pointer items-center gap-2 overflow-hidden rounded-xl bg-primary px-8 py-4 text-label-md font-bold text-on-primary shadow-[0_10px_28px_-14px_rgba(0,31,17,0.55)] transition-all duration-500 hover:shadow-[0_18px_40px_-14px_rgba(254,147,44,0.45)] sm:px-10"
           >
@@ -118,7 +121,7 @@ export function ForCoaches() {
             >
               <path d="M4 10h12M11 5l5 5-5 5" />
             </svg>
-          </motion.a>
+          </MotionLink>
         </div>
       </Reveal>
     </section>
