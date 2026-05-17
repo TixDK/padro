@@ -8,9 +8,9 @@ const ITEMS = [
     body: 'Every coach shows their certifications, experience, and price before you book. Sessions are rated by the players who actually took them — so what you see is what you get.',
   },
   {
-    icon: 'sports_tennis',
-    title: 'Courts you can compare side by side',
-    body: 'Glass-walled clubs and local courts in one feed. Filter by city, surface, and price, then pick the one that fits the session you want.',
+    icon: 'tune',
+    title: 'Find your match in a single feed',
+    body: 'Filter coaches by city, level, language, and price. Padro is the introduction — once you pick a coach, the two of you choose where to play.',
   },
   {
     icon: 'schedule',

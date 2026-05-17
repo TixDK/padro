@@ -102,8 +102,8 @@ export function DownloadApp() {
           }}
           className="mx-auto mb-12 max-w-md text-body-md text-on-primary-container"
         >
-          Seamlessly book courts, message your coach directly, and manage your
-          favourite venues. Everything Padro — right on your phone.
+          Seamlessly book sessions, message your coach directly, and manage
+          your favourite coaches. Everything Padro — right on your phone.
         </motion.p>
 
         <motion.div

@@ -8,7 +8,7 @@ const TIERS = [
     desc: 'Best for occasional match play and drills.',
     price: '€0',
     period: '/month',
-    features: ['Pay per session', 'Standard court access', 'Basic profile'],
+    features: ['Pay per session', 'Browse all coaches', 'Basic profile'],
     cta: 'Start Playing',
     highlighted: false,
   },
@@ -19,7 +19,7 @@ const TIERS = [
     period: '/month',
     features: [
       '15% off coach fees',
-      'Priority court booking',
+      'Priority booking with top coaches',
       'Monthly strategy webinar',
     ],
     cta: 'Go Plus',

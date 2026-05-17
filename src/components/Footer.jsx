@@ -47,8 +47,8 @@ export function Footer() {
                 </span>
               </a>
               <p className="mt-8 max-w-sm text-body-md text-on-primary-container/80">
-                We connect padel players with coaches and courts across
-                Denmark. One platform, live availability, no phone tag.
+                The bridge between padel players and coaches across Denmark.
+                One platform, live availability, no phone tag.
               </p>
               <div className="mt-8 flex items-center gap-3 text-[10px] font-semibold uppercase tracking-[0.32em] text-on-primary-container/70">
                 <span
@@ -65,8 +65,8 @@ export function Footer() {
                 The padel briefing.
               </h4>
               <p className="mt-3 max-w-md text-body-md text-on-primary-container/80">
-                Quarterly notes from the courts — new coaches, training drops,
-                and quiet upgrades. No noise.
+                Quarterly notes from the padel scene — new coaches, training
+                drops, and quiet upgrades. No noise.
               </p>
               <form
                 onSubmit={(e) => e.preventDefault()}
